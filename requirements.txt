@@ -4,6 +4,5 @@ pandas
 ortools
 streamlit
 datetime
-pathlib
 xlsxwriter
 BytesIO   
