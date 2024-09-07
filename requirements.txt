@@ -5,4 +5,3 @@ ortools
 streamlit
 datetime
 xlsxwriter
-BytesIO   
