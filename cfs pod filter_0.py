@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
-import io
-from pathlib import Path
 
 def handle_uploaded_file(uploaded_file):
-    # Read the uploaded file
     try:
         if uploaded_file.name.endswith('.csv'):
             df = pd.read_csv(uploaded_file)
@@ -18,25 +15,20 @@ def handle_uploaded_file(uploaded_file):
         st.error(f"Error reading file: {e}")
         return {}
 
-    # Normalize column names to handle variations
     df.columns = df.columns.str.strip().str.upper()
     pod_column = 'POD'
     cfs_column = 'CFS'
     
-    # Filter rows where POD is 'PPG' or variations
     filtered_df = df[df[pod_column].str.upper().str.contains('PPG', na=False)]
 
-    # Get unique names in 'CFS' column
     try:
         unique_cfs_names = filtered_df[cfs_column].str.split(',').explode().str.strip().unique()
     except Exception as e:
         st.error(f"Error processing 'CFS' column: {e}")
         return {}
 
-    # Prepare to store output files
     output_files = {}
 
-    # Create and save a filtered DataFrame for each unique 'CFS' name
     for name in unique_cfs_names:
         try:
             name_filtered_df = filtered_df[filtered_df[cfs_column].str.contains(name, na=False)]
@@ -58,9 +50,10 @@ if uploaded_file:
     if filtered_files:
         st.write("Files ready for download:")
         for name, file in filtered_files.items():
-            st.download_button(
-                label=f"Download {name}",
-                data=open(file, 'rb').read(),
-                file_name=file,
-                mime='text/csv'
-            )
+            with open(file, 'rb') as f:
+                st.download_button(
+                    label=f"Download {name}",
+                    data=f.read(),
+                    file_name=file,
+                    mime='text/csv'
+                )
