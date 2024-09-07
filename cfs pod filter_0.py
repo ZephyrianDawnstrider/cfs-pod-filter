@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
+import io
 
 def handle_uploaded_file(uploaded_file):
+    # Read the uploaded file
     try:
         if uploaded_file.name.endswith('.csv'):
             df = pd.read_csv(uploaded_file)
@@ -15,26 +17,29 @@ def handle_uploaded_file(uploaded_file):
         st.error(f"Error reading file: {e}")
         return {}
 
+    # Normalize column names to handle variations
     df.columns = df.columns.str.strip().str.upper()
     pod_column = 'POD'
     cfs_column = 'CFS'
     
+    # Filter rows where POD is 'PPG' or variations
     filtered_df = df[df[pod_column].str.upper().str.contains('PPG', na=False)]
 
+    # Get unique names in 'CFS' column
     try:
         unique_cfs_names = filtered_df[cfs_column].str.split(',').explode().str.strip().unique()
     except Exception as e:
         st.error(f"Error processing 'CFS' column: {e}")
         return {}
 
+    # Prepare to store output data
     output_files = {}
 
+    # Create and save a filtered DataFrame for each unique 'CFS' name
     for name in unique_cfs_names:
         try:
             name_filtered_df = filtered_df[filtered_df[cfs_column].str.contains(name, na=False)]
-            output_filename = f'filtered_data_{name.replace(" ", "_")}.csv'
-            name_filtered_df.to_csv(output_filename, index=False)
-            output_files[name] = output_filename
+            output_files[name] = name_filtered_df.to_csv(index=False).encode('utf-8')
         except Exception as e:
             continue
 
@@ -49,11 +54,10 @@ if uploaded_file:
 
     if filtered_files:
         st.write("Files ready for download:")
-        for name, file in filtered_files.items():
-            with open(file, 'rb') as f:
-                st.download_button(
-                    label=f"Download {name}",
-                    data=f.read(),
-                    file_name=file,
-                    mime='text/csv'
-                )
+        for name, data in filtered_files.items():
+            st.download_button(
+                label=f"Download {name}",
+                data=data,
+                file_name=f'filtered_data_{name.replace(" ", "_")}.csv',
+                mime='text/csv'
+            )
