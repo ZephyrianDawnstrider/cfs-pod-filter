@@ -4,3 +4,4 @@ pandas
 ortools
 streamlit
 datetime
+pathlib
