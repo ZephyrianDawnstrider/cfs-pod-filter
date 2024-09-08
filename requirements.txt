@@ -4,3 +4,5 @@ ortools
 streamlit
 datetime
 xlsxwriter
+flask
+openpyxl
